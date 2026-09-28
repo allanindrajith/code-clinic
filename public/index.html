@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Clinic — AI Debugging Doctor</title>
+  <meta name="description" content="A doctor for your code. Describe symptoms, get focused diagnostic questions, real-time web verification, surgical code patches, and long-term memory.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- SF Pro Rounded equivalent (Nunito) and clean sans/mono -->
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Nunito:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation (matching primary-nav spec in DESIGN.md) -->
+  <header class="primary-nav">
+    <div class="nav-container">
+      <div class="nav-left">
+        <a href="#consultation" class="nav-brand" id="brand-link">
+          <img src="mascot.svg" alt="Code Clinic Doctor Mascot" class="nav-mascot">
+          <span class="nav-title">Code Clinic</span>
+        </a>
+        <nav class="nav-links">
+          <a href="#consultation" class="nav-link active" data-tab="consultation">Consultation</a>
+          <a href="#triage" class="nav-link" data-tab="triage">Triage Cases</a>
+          <a href="#chart" class="nav-link" data-tab="chart">Patient Chart</a>
+          <a href="#sandbox" class="nav-link" data-tab="sandbox">Code ICU</a>
+          <a href="#vault" class="nav-link" data-tab="vault">Clinical Memory</a>
+        </nav>
+      </div>
+
+      <div class="nav-center">
+        <div class="search-pill-wrapper">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="search-pill" id="global-search" placeholder="Search clinical records, symptoms, errors..." aria-label="Search clinical records">
+        </div>
+      </div>
+
+      <div class="nav-right">
+        <button type="button" class="button-secondary" id="btn-new-consultation">New Patient</button>
+        <button type="button" class="button-primary" id="btn-open-settings">Doctor Settings</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Reading Column (~720px - 880px) -->
+  <main class="main-canvas">
+
+    <!-- Hero Section -->
+    <section class="hero-section" id="hero-sec">
+      <div class="hero-mascot-wrapper">
+        <img src="mascot.svg" alt="Doctor Owl Mascot" class="hero-mascot">
+      </div>
+      <h1 class="hero-title">The easiest way to diagnose and cure broken code</h1>
+      <p class="hero-subtitle">Like a senior physician doing pair debugging: listens to symptoms, asks one focused question at a time, checks fresh documentation, and prescribes the smallest surgical fix.</p>
+      
+      <!-- Signature CLI Install / Command Snippet (matching DESIGN.md) -->
+      <div class="install-snippet-container">
+        <div class="install-snippet" id="install-snippet-pill">
+          <span class="command-prompt">$</span>
+          <span class="command-text">curl -fsSL https://codeclinic.dev/cure.sh | sh</span>
+          <button type="button" class="btn-copy-command" id="btn-copy-curl" title="Copy command">Copy</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Emergency Room Triage Presets (Quick load real-world bugs) -->
+    <section class="section-block" id="triage-section">
+      <div class="section-header">
+        <h2 class="section-title">Emergency Room Triage</h2>
+        <p class="section-desc">Test real-world bugs instantly. Click any case to admit the patient to Dr. Debug's clinic.</p>
+      </div>
+
+      <div class="triage-grid" id="triage-cards-container">
+        <!-- Injected via JavaScript from clinic_memory templates -->
+      </div>
+    </section>
+
+    <!-- Main Consultation Clinic Area -->
+    <section class="section-block active-view" id="consultation-section">
+      
+      <div class="clinic-split-layout">
+        
+        <!-- Left: Consultation Chat & Prescription Stream -->
+        <div class="consultation-column">
+          
+          <div class="consultation-card">
+            
+            <!-- Consultation Header -->
+            <div class="clinic-room-header">
+              <div class="room-indicator">
+                <span class="status-pulse-dot"></span>
+                <span class="room-title">Examining Room #1 — Dr. Debug on Duty</span>
+              </div>
+              <div class="session-badge" id="session-badge-id">Session: CC-8921</div>
+            </div>
+
+            <!-- Dialogue Stream -->
+            <div class="dialogue-stream" id="dialogue-stream">
+              
+              <!-- Initial Welcome Message from Dr. Debug -->
+              <div class="message-row doctor-row">
+                <div class="avatar-cell">
+                  <img src="mascot.svg" alt="Dr. Debug" class="avatar-mascot">
+                </div>
+                <div class="message-bubble doctor-bubble">
+                  <div class="bubble-header">
+                    <span class="speaker-name">Dr. Debug</span>
+                    <span class="speaker-role">Chief of Diagnostic Engineering</span>
+                  </div>
+                  <div class="bubble-body">
+                    <p>Welcome to the Code Clinic. Tell me what symptoms your program is experiencing. What were you trying to achieve, and what exact error or unexpected behavior occurred?</p>
+                    <p class="tip-prose">Tip: If you have an error stack trace or snippet, paste it below. I prescribe minimal surgical patches rather than rewriting your entire codebase.</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Web Search Tool Activity Indicator (Hidden by default) -->
+            <div class="tool-activity-card hidden" id="tool-activity-card">
+              <div class="tool-activity-content">
+                <span class="tool-spinner"></span>
+                <span class="tool-label" id="tool-label-text">Checking official documentation and recent GitHub issues...</span>
+              </div>
+            </div>
+
+            <!-- Intake Prescription & Input Form -->
+            <form class="intake-form" id="intake-form">
+              <div class="form-row">
+                <label for="input-symptom" class="form-label">Symptom Description / What Happened</label>
+                <textarea class="code-textarea" id="input-symptom" rows="2" placeholder="e.g. Component fails to render after clicking fetch, or route handler throws an async error..." required></textarea>
+              </div>
+
+              <div class="form-row-grid">
+                <div class="form-col">
+                  <label for="input-error" class="form-label">Exact Error / Stack Trace (Optional)</label>
+                  <textarea class="code-textarea monospace-text" id="input-error" rows="3" placeholder="TypeError: Cannot read properties of undefined..."></textarea>
+                </div>
+                <div class="form-col">
+                  <label for="input-code" class="form-label">Relevant Code Snippet (Optional)</label>
+                  <textarea class="code-textarea monospace-text" id="input-code" rows="3" placeholder="// Paste only the affected function or block&#10;export async function GET() { ... }"></textarea>
+                </div>
+              </div>
+
+              <div class="form-actions-row">
+                <div class="quick-chips">
+                  <span class="chip-label">Quick specify:</span>
+                  <button type="button" class="command-tag" data-tag="JavaScript">JS / TS</button>
+                  <button type="button" class="command-tag" data-tag="Python">Python</button>
+                  <button type="button" class="command-tag" data-tag="Next.js">Next.js</button>
+                  <button type="button" class="command-tag" data-tag="Docker">Docker</button>
+                </div>
+
+                <div class="submit-cluster">
+                  <button type="button" class="button-secondary" id="btn-clear-intake">Clear</button>
+                  <button type="submit" class="button-primary" id="btn-submit-consultation">Consult Dr. Debug</button>
+                </div>
+              </div>
+            </form>
+
+          </div>
+
+        </div>
+
+        <!-- Right: Patient Medical Chart ("Medical Record" - Session Memory) -->
+        <aside class="chart-column">
+          <div class="patient-chart-card">
+            
+            <div class="chart-header">
+              <h3 class="chart-title">Patient Medical Chart</h3>
+              <span class="chart-status-badge status-intake" id="patient-status-badge">INTAKE</span>
+            </div>
+
+            <div class="chart-body">
+              
+              <div class="chart-section">
+                <span class="chart-meta-label">Patient Record ID</span>
+                <span class="chart-meta-val" id="chart-patient-id">patient-01</span>
+              </div>
+
+              <div class="chart-section">
+                <span class="chart-meta-label">Diagnostic Phase</span>
+                <span class="chart-meta-val" id="chart-phase-text">Intake Evaluation</span>
+              </div>
+
+              <div class="chart-section">
+                <span class="chart-meta-label">Detected Tech Stack</span>
+                <div class="chart-stack-chips" id="chart-stack-container">
+                  <span class="stack-chip">Language: <b id="chart-lang">—</b></span>
+                  <span class="stack-chip">Framework: <b id="chart-fw">—</b></span>
+                  <span class="stack-chip">Platform: <b id="chart-os">macOS / Web</b></span>
+                </div>
+              </div>
+
+              <div class="chart-section">
+                <span class="chart-meta-label">Active Error Signature</span>
+                <div class="chart-error-preview" id="chart-error-sig">None recorded</div>
+              </div>
+
+              <div class="chart-section">
+                <span class="chart-meta-label">Prior Clinical Memory</span>
+                <div class="chart-memory-status" id="chart-memory-note">
+                  Learning store ready. 4 verified case templates indexed.
+                </div>
+              </div>
+
+              <div class="chart-actions">
+                <button type="button" class="button-secondary full-width" id="btn-export-chart">Export Chart (Markdown)</button>
+              </div>
+
+            </div>
+
+          </div>
+        </aside>
+
+      </div>
+
+    </section>
+
+    <!-- Code ICU Sandbox Section (matching terminal-card spec in DESIGN.md) -->
+    <section class="section-block" id="sandbox-section">
+      <div class="section-header">
+        <h2 class="section-title">Code ICU — Interactive Sandbox Laboratory</h2>
+        <p class="section-desc">Verify fixes and reproduce errors inside isolated sandboxes. Clean execution with real runtime stdout/stderr.</p>
+      </div>
+
+      <div class="terminal-card">
+        <!-- Terminal Header with macOS Traffic Lights (DESIGN.md) -->
+        <div class="terminal-header">
+          <div class="terminal-traffic-lights">
+            <span class="traffic-dot dot-red"></span>
+            <span class="traffic-dot dot-yellow"></span>
+            <span class="traffic-dot dot-green"></span>
+          </div>
+          <span class="terminal-title">code-clinic-sandbox-v1.0 (Node.js & Python)</span>
+          <div class="terminal-controls">
+            <select class="sandbox-lang-select" id="sandbox-language">
+              <option value="javascript">JavaScript (Node.js v26)</option>
+              <option value="python">Python 3</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sandbox-editor-split">
+          <div class="sandbox-input-pane">
+            <div class="pane-bar">
+              <span>Code Snippet under test</span>
+              <button type="button" class="button-primary small-pill" id="btn-run-sandbox">Execute Code</button>
+            </div>
+            <textarea class="sandbox-textarea" id="sandbox-code-input" spellcheck="false">// Try running your reproduction snippet or test a surgical patch:
+function calculateDiscount(price, user) {
+  // Bug simulation: user might be undefined
+  return price * (1 - (user?.discountRate ?? 0.1));
+}
+
+console.log("Discounted price:", calculateDiscount(100, { discountRate: 0.25 }));
+console.log("With default discount:", calculateDiscount(100, null));
+</textarea>
+          </div>
+
+          <div class="sandbox-output-pane">
+            <div class="pane-bar">
+              <span>Execution Output & Diagnostics</span>
+              <span class="badge-status" id="sandbox-exit-status">Ready</span>
+            </div>
+            <pre class="terminal-output" id="sandbox-terminal-output"><span class="terminal-comment">// Output will stream here upon execution...</span></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Clinical Memory Vault (Dark inverted card accent - DESIGN.md pricing-card-dark / cta-strip-dark) -->
+    <section class="section-block" id="vault-section">
+      <div class="cta-strip-dark">
+        <div class="cta-dark-header">
+          <div class="vault-badge-pill">Clinical Memory Vault</div>
+          <h2 class="cta-dark-title">Retrieval-Augmented Memory (RAG Learning Store)</h2>
+          <p class="cta-dark-desc">How Dr. Debug gets smarter while you code. When a user reports a bug and marks a prescription successful, the error signature, root cause, and surgical patch are added to the clinic memory vault. Future patients with similar symptoms receive instant, high-confidence treatments.</p>
+        </div>
+
+        <div class="vault-grid" id="vault-cases-container">
+          <!-- Populated from server learning store -->
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Wall (Documented in DESIGN.md) -->
+    <section class="section-block" id="faq-section">
+      <div class="section-header">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <p class="section-desc">Everything you need to know about the Code Clinic diagnostic methodology.</p>
+      </div>
+
+      <div class="faq-container">
+        
+        <div class="faq-row">
+          <h3 class="faq-question">How does Dr. Debug differ from general search engines or code generators?</h3>
+          <p class="faq-answer">Code Clinic operates as a senior pair-debugging physician. Instead of dumping walls of generic code or dozens of search links, it asks focused questions to narrow down the symptom, explains the precise root cause ("why this happens"), and prescribes the smallest surgical patch first.</p>
+        </div>
+
+        <div class="faq-row">
+          <h3 class="faq-question">When does Dr. Debug perform web searches?</h3>
+          <p class="faq-answer">Dr. Debug preserves speed and token budget by not searching on timeless bugs (syntax errors, off-by-one errors, null checks). It specifically triggers web searches when encountering recent library versions (e.g. Next.js 15, React 19), obscure error strings, or breaking API changes.</p>
+        </div>
+
+        <div class="faq-row">
+          <h3 class="faq-question">How does the "Learning while typing" loop work without fine-tuning?</h3>
+          <p class="faq-answer">Fine-tuning LLM weights live is slow and unreliable. Code Clinic uses RAG (Retrieval-Augmented Generation) memory. Each solved case and outcome feedback ("Did this solve it?") is stored with error signatures, stack metadata, and tested patches. Future queries match these signatures and boost verified cures.</p>
+        </div>
+
+        <div class="faq-row">
+          <h3 class="faq-question">Is code executed safely?</h3>
+          <p class="faq-answer">Yes. Code testing in the ICU Sandbox runs inside bounded child processes with strict timeouts, standard isolation, and no elevated permissions.</p>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer (matching footer-section spec in DESIGN.md) -->
+  <footer class="footer-section">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="#consultation">Consultation</a>
+        <a href="#triage">Triage Cases</a>
+        <a href="#sandbox">Code ICU</a>
+        <a href="#vault">Clinical Memory</a>
+        <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+        <a href="#faq-section">FAQ</a>
+      </div>
+      <div class="footer-copy">
+        © 2026 Code Clinic. Built with the Ollama minimalist documentation design system.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Doctor Settings Modal -->
+  <dialog class="clinic-modal" id="settings-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Doctor Configuration</h3>
+        <button type="button" class="btn-close-modal" id="btn-close-settings" aria-label="Close settings">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">Configure your preferred diagnostic LLM engine or use the built-in clinical intelligence core.</p>
+
+        <div class="form-row">
+          <label for="setting-provider" class="form-label">Diagnostic Brain</label>
+          <select class="settings-select" id="setting-provider">
+            <option value="local">Dr. Debug Neural Core (Built-in Clinic Heuristics & AST Analyzer)</option>
+            <option value="gemini">Google Gemini (Gemini 2.5 Flash / Pro)</option>
+            <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
+            <option value="anthropic">Anthropic Claude (Claude 3.5 Sonnet)</option>
+            <option value="ollama">Ollama Local Instance (http://localhost:11434)</option>
+          </select>
+        </div>
+
+        <div class="form-row" id="api-key-group">
+          <label for="setting-api-key" class="form-label">API Key (Optional for Custom Providers)</label>
+          <input type="password" class="text-input" id="setting-api-key" placeholder="Enter key (stored only in local session)">
+        </div>
+
+        <div class="form-row">
+          <label for="setting-search-mode" class="form-label">Web Verification Tool</label>
+          <select class="settings-select" id="setting-search-mode">
+            <option value="auto">Adaptive (Search only for obscure errors & version changes)</option>
+            <option value="always">Aggressive (Verify every consultation with search)</option>
+            <option value="offline">Offline / Sandboxed (Pure internal clinical reasoning)</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="button-secondary" id="btn-cancel-settings">Cancel</button>
+          <button type="button" class="button-primary" id="btn-save-settings">Save Preferences</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Notification Toast -->
+  <div class="toast-notification hidden" id="toast-notification">Notification message</div>
+
+  <script src="app.js"></script>
+</body>
+</html>

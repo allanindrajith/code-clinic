@@ -1,0 +1,21 @@
+{
+  "name": "code-clinic",
+  "version": "1.0.0",
+  "description": "Code Clinic — Debugging Chatbot & Diagnostic System",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "debugging",
+    "ai",
+    "code-clinic",
+    "chatbot",
+    "doctor",
+    "diagnostics"
+  ],
+  "author": "Code Clinic Team",
+  "license": "MIT"
+}

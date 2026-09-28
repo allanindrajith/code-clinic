@@ -1,0 +1,340 @@
+{
+  "learning_store": [
+    {
+      "id": "case-rec-101",
+      "signature": "TypeError: Cannot read properties of undefined (reading 'map')",
+      "keywords": [
+        "undefined",
+        "map",
+        "array",
+        "react",
+        "javascript",
+        "typescript"
+      ],
+      "stack": {
+        "language": "JavaScript / TypeScript",
+        "framework": "React / Next.js",
+        "environment": "Browser / Node.js"
+      },
+      "symptom": "Component crashes during render when attempting to iterate over props or state data that hasn't arrived yet from an async fetch.",
+      "root_cause": "The variable passed to .map() is initialized as undefined or null before the asynchronous fetch promise resolves, or the API response returned an object with a nested array instead of a direct array.",
+      "treatment": "Use optional chaining with a default empty array fallback: (items || []).map(...) or items?.map(...), and ensure initial state is an empty array useState([]).",
+      "code_patch": "// Before:\nconst list = data.items.map(item => <Item key={item.id} {...item} />);\n\n// After (Surgical Treatment):\nconst list = (data?.items ?? []).map(item => (\n  <Item key={item.id} {...item} />\n));",
+      "prevention": "1. Define rigorous TypeScript interfaces for API payloads. 2. Initialize list state with [] instead of null/undefined. 3. Implement an explicit loading boundary or Skeleton before mapping data.",
+      "success_count": 18,
+      "failure_count": 0,
+      "confidence": 0.99
+    },
+    {
+      "id": "case-rec-102",
+      "signature": "Route handler cookies() should be awaited in Next.js 15",
+      "keywords": [
+        "cookies",
+        "next.js",
+        "nextjs",
+        "nextjs 15",
+        "async",
+        "await",
+        "headers"
+      ],
+      "stack": {
+        "language": "TypeScript",
+        "framework": "Next.js 15+",
+        "environment": "Node.js 20+ / Vercel"
+      },
+      "symptom": "Calling const cookieStore = cookies() throws a synchronous access runtime warning or error in Next.js 15.",
+      "root_cause": "In Next.js 15, dynamic APIs like cookies(), headers(), and params became asynchronous Promises to allow internal performance optimizations and early streaming.",
+      "treatment": "Await the cookies() call inside the async function: const cookieStore = await cookies();",
+      "code_patch": "// Before (Next.js 14):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}\n\n// After (Next.js 15 Treatment):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = await cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}",
+      "prevention": "When upgrading to Next.js 15+, run `npx @next/codemod@canary next-async-request-api .` to automatically upgrade all synchronous request-specific APIs.",
+      "success_count": 13,
+      "failure_count": 1,
+      "confidence": 0.93
+    },
+    {
+      "id": "case-rec-103",
+      "signature": "RuntimeError: Event loop is closed in asyncio Python",
+      "keywords": [
+        "runtimeerror",
+        "event loop is closed",
+        "asyncio",
+        "python",
+        "aiohttp"
+      ],
+      "stack": {
+        "language": "Python 3.10+",
+        "framework": "asyncio / aiohttp / Playwright",
+        "environment": "macOS / Windows / Linux"
+      },
+      "symptom": "Python script fails at exit or during connection cleanup with RuntimeError: Event loop is closed when using asyncio.run() or aiohttp ClientSession.",
+      "root_cause": "Async resources (like aiohttp.ClientSession or database connection pools) were closed after the event loop finished or the Windows selector loop shut down ungracefully.",
+      "treatment": "Ensure all client sessions and connectors are closed inside an async with context manager BEFORE the loop exits, or add asyncio.sleep(0.25) before loop shutdown to allow pending SSL transports to flush.",
+      "code_patch": "# Before:\nsession = aiohttp.ClientSession()\n# ... async code without closing\n\n# After (Surgical Treatment):\nasync def main():\n    async with aiohttp.ClientSession() as session:\n        async with session.get('https://api.example.com') as resp:\n            return await resp.json()\n\nif __name__ == '__main__':\n    asyncio.run(main())",
+      "prevention": "Always wrap network and database clients inside async context managers (async with) so cleanup hooks execute while the event loop is active.",
+      "success_count": 9,
+      "failure_count": 0,
+      "confidence": 0.98
+    },
+    {
+      "id": "case-rec-104",
+      "signature": "Error: EACCES: permission denied, mkdir '/app/node_modules'",
+      "keywords": [
+        "eacces",
+        "permission denied",
+        "docker",
+        "node_modules",
+        "npm",
+        "user node"
+      ],
+      "stack": {
+        "language": "JavaScript / Node.js",
+        "framework": "Docker / Container",
+        "environment": "Linux Alpine / Debian"
+      },
+      "symptom": "Docker container fails during npm install or volume mount with EACCES: permission denied.",
+      "root_cause": "Host volume mount overwrites container file ownership with root permissions, while the container runs as unprivileged user 'node', preventing directory creation.",
+      "treatment": "In your Dockerfile, create the directory and set ownership to node user before USER node: RUN mkdir -p /app/node_modules && chown -R node:node /app",
+      "code_patch": "# Before:\nUSER node\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\n\n# After (Surgical Treatment):\nWORKDIR /app\nRUN mkdir -p /app/node_modules && chown -R node:node /app\nUSER node\nCOPY --chown=node:node package*.json ./\nRUN npm install",
+      "prevention": "Use named volumes for node_modules in docker-compose.yml: `volumes: [ .:/app, /app/node_modules ]` to prevent host directory ownership bleeding into container.",
+      "success_count": 14,
+      "failure_count": 1,
+      "confidence": 0.95
+    }
+  ],
+  "triage_templates": [
+    {
+      "title": "Next.js 15 cookies() breaking change",
+      "badge": "React / Next.js 15",
+      "language": "TypeScript",
+      "framework": "Next.js 15.0.0",
+      "os": "macOS Sequoia (Darwin 24)",
+      "error": "Error: Route handler cookies() should be awaited in Next.js 15. The `cookies()` function now returns a Promise.",
+      "code": "import { cookies } from 'next/headers';\n\nexport async function GET(request: Request) {\n  const cookieStore = cookies(); // <-- Throws error here\n  const sessionId = cookieStore.get('sessionId')?.value;\n  return Response.json({ activeSession: sessionId });\n}",
+      "expected": "Expected route handler to read the sessionId cookie from incoming request headers.",
+      "actual": "Throws error at runtime stating cookies() is a Promise and must be awaited."
+    },
+    {
+      "title": "TypeError: Cannot read properties of undefined (reading 'map')",
+      "badge": "JavaScript / React",
+      "language": "JavaScript",
+      "framework": "React 18 / Vite",
+      "os": "macOS",
+      "error": "Uncaught TypeError: Cannot read properties of undefined (reading 'map') at UserList.jsx:14:19",
+      "code": "function UserList() {\n  const [users, setUsers] = useState(); // undefined initially\n\n  useEffect(() => {\n    fetch('/api/users').then(r => r.json()).then(data => setUsers(data));\n  }, []);\n\n  return (\n    <ul>\n      {users.map(u => <li key={u.id}>{u.name}</li>)}\n    </ul>\n  );\n}",
+      "expected": "Display list of users once fetched from API.",
+      "actual": "Screen turns blank with uncaught TypeError reading 'map' on initial render."
+    },
+    {
+      "title": "Python asyncio RuntimeError: Event loop is closed",
+      "badge": "Python 3.12 / asyncio",
+      "language": "Python",
+      "framework": "asyncio / aiohttp",
+      "os": "macOS / Linux",
+      "error": "RuntimeError: Event loop is closed\n  File \"/usr/local/lib/python3.12/asyncio/base_events.py\", line 519, in _check_closed\n    raise RuntimeError('Event loop is closed')",
+      "code": "import asyncio\nimport aiohttp\n\nasync def fetch_data():\n    session = aiohttp.ClientSession()\n    resp = await session.get('https://httpbin.org/get')\n    data = await resp.json()\n    return data\n\nif __name__ == '__main__':\n    data = asyncio.run(fetch_data())\n    print(data)",
+      "expected": "Clean exit after fetching JSON payload.",
+      "actual": "Crashes on program termination with RuntimeError: Event loop is closed trace."
+    },
+    {
+      "title": "Docker Node.js EACCES permission denied",
+      "badge": "Docker / DevOps",
+      "language": "Dockerfile / Node.js",
+      "framework": "Docker Compose",
+      "os": "Linux / Docker Desktop",
+      "error": "npm ERR! code EACCES\nnpm ERR! syscall mkdir\nnpm ERR! path /app/node_modules/.staging\nnpm ERR! errno -13\nnpm ERR! Error: EACCES: permission denied, mkdir '/app/node_modules/.staging'",
+      "code": "FROM node:20-alpine\nWORKDIR /app\nUSER node\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nCMD [\"node\", \"server.js\"]",
+      "expected": "Build container image with non-root user 'node'.",
+      "actual": "npm install fails with EACCES permission denied on /app/node_modules directory."
+    }
+  ],
+  "sessions": {
+    "test-session-1": {
+      "id": "test-session-1",
+      "createdAt": "2026-09-24T12:00:22.141Z",
+      "updatedAt": "2026-09-24T12:00:23.229Z",
+      "status": "prescribed",
+      "patientFacts": {
+        "language": null,
+        "framework": "Next.js",
+        "os": null,
+        "versions": {
+          "next": "15.x"
+        },
+        "errorSignature": "Error: Route handler cookies() should be awaited in Next.js 15",
+        "diagnosedBugs": [],
+        "resolvedCount": 0,
+        "lastDiagnosis": "### 1. Diagnosis (Root Cause Hypothesis)\nIn Next.js 15, dynamic APIs like cookies(), headers(), and params became asynchronous Promises to allow internal performance optimizations and early streaming.\n\n*Why this happens:* Calling const cookieStore = cookies() throws a synchronous access runtime warning or error in Next.js 15.",
+        "lastTreatment": "// Before (Next.js 14):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}\n\n// After (Next.js 15 Treatment):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = await cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}",
+        "lastCodePatch": "// Before (Next.js 14):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}\n\n// After (Next.js 15 Treatment):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = await cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}",
+        "lastSymptom": "Route handler throws error in Next.js 15"
+      },
+      "messages": [
+        {
+          "role": "user",
+          "content": "Route handler throws error in Next.js 15",
+          "code": "",
+          "error": "Error: Route handler cookies() should be awaited in Next.js 15",
+          "timestamp": "2026-09-24T12:00:23.230Z"
+        },
+        {
+          "role": "assistant",
+          "content": "### 1. Diagnosis (Root Cause Hypothesis)\nIn Next.js 15, dynamic APIs like cookies(), headers(), and params became asynchronous Promises to allow internal performance optimizations and early streaming.\n\n*Why this happens:* Calling const cookieStore = cookies() throws a synchronous access runtime warning or error in Next.js 15.\n\n// Before (Next.js 14):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}\n\n// After (Next.js 15 Treatment):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = await cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}",
+          "payload": {
+            "sessionId": "test-session-1",
+            "phase": "diagnosis",
+            "clarifyingQuestion": null,
+            "diagnosis": "### 1. Diagnosis (Root Cause Hypothesis)\nIn Next.js 15, dynamic APIs like cookies(), headers(), and params became asynchronous Promises to allow internal performance optimizations and early streaming.\n\n*Why this happens:* Calling const cookieStore = cookies() throws a synchronous access runtime warning or error in Next.js 15.",
+            "patchCode": "// Before (Next.js 14):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}\n\n// After (Next.js 15 Treatment):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = await cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}",
+            "prevention": "When upgrading to Next.js 15+, run `npx @next/codemod@canary next-async-request-api .` to automatically upgrade all synchronous request-specific APIs.",
+            "didSearch": true,
+            "searchQuery": "Error: Route handler cookies() should be awaited in Next.js 15",
+            "searchResults": [
+              {
+                "title": "Web result for: Error: Route handler cookies() should be awaited in Next.js 15",
+                "url": "https://stackoverflow.com",
+                "snippet": "Fix Next.js 15 async cookies() and headers() errors — &#x27;Route used cookies&#x27;, &#x27;Cookies can only be modified in a Server Action or Route Handler&#x27;, codemod misses, library compatibility, and TypeScript type mismatches after upgrade."
+              },
+              {
+                "title": "Web result for: Error: Route handler cookies() should be awaited in Next.js 15",
+                "url": "https://stackoverflow.com",
+                "snippet": "I have a Next js 15 Console Warning: &quot;Error: Route&quot;/&quot; uses cookies ().get , cookies () should be awaited before using its value&quot; Ask Question Asked 1 year, 7 months ago Modified 1 year, 1 month ago"
+              },
+              {
+                "title": "Web result for: Error: Route handler cookies() should be awaited in Next.js 15",
+                "url": "https://stackoverflow.com",
+                "snippet": "Next.js 15 made cookies() async — await cookies() in Server Components, Actions and Route Handlers. Covers the codemod and NEXT_STATIC_GEN_BAILOUT."
+              }
+            ],
+            "sandboxRun": null,
+            "matchedCaseId": "case-rec-102",
+            "retrievedFromMemory": true,
+            "patientFacts": {
+              "language": null,
+              "framework": "Next.js",
+              "os": null,
+              "versions": {
+                "next": "15.x"
+              },
+              "errorSignature": "Error: Route handler cookies() should be awaited in Next.js 15",
+              "diagnosedBugs": [],
+              "resolvedCount": 0,
+              "lastDiagnosis": "### 1. Diagnosis (Root Cause Hypothesis)\nIn Next.js 15, dynamic APIs like cookies(), headers(), and params became asynchronous Promises to allow internal performance optimizations and early streaming.\n\n*Why this happens:* Calling const cookieStore = cookies() throws a synchronous access runtime warning or error in Next.js 15.",
+              "lastTreatment": "// Before (Next.js 14):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}\n\n// After (Next.js 15 Treatment):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = await cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}",
+              "lastCodePatch": "// Before (Next.js 14):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}\n\n// After (Next.js 15 Treatment):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = await cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}",
+              "lastSymptom": "Route handler throws error in Next.js 15"
+            }
+          },
+          "timestamp": "2026-09-24T12:00:23.230Z"
+        }
+      ],
+      "toolCalls": [],
+      "appliedCures": []
+    },
+    "patient-2763": {
+      "id": "patient-2763",
+      "createdAt": "2026-09-24T12:01:43.310Z",
+      "updatedAt": "2026-09-24T12:01:43.310Z",
+      "status": "intake",
+      "patientFacts": {
+        "language": null,
+        "framework": null,
+        "os": null,
+        "versions": {},
+        "errorSignature": null,
+        "diagnosedBugs": [],
+        "resolvedCount": 0
+      },
+      "messages": [],
+      "toolCalls": [],
+      "appliedCures": []
+    },
+    "patient-9524": {
+      "id": "patient-9524",
+      "createdAt": "2026-09-24T12:04:02.896Z",
+      "updatedAt": "2026-09-24T12:04:03.794Z",
+      "status": "cured",
+      "patientFacts": {
+        "language": "JavaScript",
+        "framework": "Next.js",
+        "os": null,
+        "versions": {
+          "next": "15.x"
+        },
+        "errorSignature": "Error: Route handler cookies() should be awaited in Next.js 15. The `cookies()` function now returns a Promise.",
+        "diagnosedBugs": [],
+        "resolvedCount": 1,
+        "lastDiagnosis": "### 1. Diagnosis (Root Cause Hypothesis)\nIn Next.js 15, dynamic APIs like cookies(), headers(), and params became asynchronous Promises to allow internal performance optimizations and early streaming.\n\n*Why this happens:* Calling const cookieStore = cookies() throws a synchronous access runtime warning or error in Next.js 15.",
+        "lastTreatment": "// Before (Next.js 14):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}\n\n// After (Next.js 15 Treatment):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = await cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}",
+        "lastCodePatch": "// Before (Next.js 14):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}\n\n// After (Next.js 15 Treatment):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = await cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}",
+        "lastSymptom": "Expected route handler to read the sessionId cookie from incoming request headers. However: Throws error at runtime stating cookies() is a Promise and must be awaited."
+      },
+      "messages": [
+        {
+          "role": "user",
+          "content": "Expected route handler to read the sessionId cookie from incoming request headers. However: Throws error at runtime stating cookies() is a Promise and must be awaited.",
+          "code": "import { cookies } from 'next/headers';\n\nexport async function GET(request: Request) {\n  const cookieStore = cookies(); // <-- Throws error here\n  const sessionId = cookieStore.get('sessionId')?.value;\n  return Response.json({ activeSession: sessionId });\n}",
+          "error": "Error: Route handler cookies() should be awaited in Next.js 15. The `cookies()` function now returns a Promise.",
+          "timestamp": "2026-09-24T12:04:03.795Z"
+        },
+        {
+          "role": "assistant",
+          "content": "### 1. Diagnosis (Root Cause Hypothesis)\nIn Next.js 15, dynamic APIs like cookies(), headers(), and params became asynchronous Promises to allow internal performance optimizations and early streaming.\n\n*Why this happens:* Calling const cookieStore = cookies() throws a synchronous access runtime warning or error in Next.js 15.\n\n// Before (Next.js 14):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}\n\n// After (Next.js 15 Treatment):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = await cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}",
+          "payload": {
+            "sessionId": "patient-9524",
+            "phase": "diagnosis",
+            "clarifyingQuestion": null,
+            "diagnosis": "### 1. Diagnosis (Root Cause Hypothesis)\nIn Next.js 15, dynamic APIs like cookies(), headers(), and params became asynchronous Promises to allow internal performance optimizations and early streaming.\n\n*Why this happens:* Calling const cookieStore = cookies() throws a synchronous access runtime warning or error in Next.js 15.",
+            "patchCode": "// Before (Next.js 14):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}\n\n// After (Next.js 15 Treatment):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = await cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}",
+            "prevention": "When upgrading to Next.js 15+, run `npx @next/codemod@canary next-async-request-api .` to automatically upgrade all synchronous request-specific APIs.",
+            "didSearch": true,
+            "searchQuery": "Error: Route handler cookies() should be awaited in Next.js 15. The `cookies()` ",
+            "searchResults": [
+              {
+                "title": "Web result for: Error: Route handler cookies() should be awaited in Next.js 15. The `cookies()` ",
+                "url": "https://stackoverflow.com",
+                "snippet": "Fix Next.js 15 async cookies() and headers() errors — &#x27;Route used cookies&#x27;, &#x27;Cookies can only be modified in a Server Action or Route Handler&#x27;, codemod misses, library compatibility, and TypeScript type mismatches after upgrade."
+              },
+              {
+                "title": "Web result for: Error: Route handler cookies() should be awaited in Next.js 15. The `cookies()` ",
+                "url": "https://stackoverflow.com",
+                "snippet": "i have this Next js version with supabase : ... i&#x27;m currently building my auth for my application, everything works well for me, but i get this console warning : &quot;Error: Route &quot;/dashboard&quot; used cookies ().get (&#x27;sb-mcoiqtohcgcgdidkeful-auth-token&#x27;). cookies () should be awaited before using its value."
+              },
+              {
+                "title": "Web result for: Error: Route handler cookies() should be awaited in Next.js 15. The `cookies()` ",
+                "url": "https://stackoverflow.com",
+                "snippet": "The server can only send instructions (via Set-Cookie headers) to tell the browser to store cookies - the actual storage happens on the client side. This is why cookie operations that modify state (.set, .delete) must be performed in a Server Function or Route Handler where the response headers can be properly set."
+              }
+            ],
+            "sandboxRun": {
+              "language": "javascript",
+              "exitCode": 1,
+              "stdout": "",
+              "stderr": "file:///Users/allanindrajith/Github%20Project/Code%20Clinic/[eval1]:3\n            import { cookies } from 'next/headers';\n                   ^\n\n'import', and 'export' cannot be used outside of module code\n\nSyntaxError: Unexpected token '{'\n    at compileSourceTextModule (node:internal/modules/esm/utils:355:16)\n    at ModuleLoader.createModuleWrap (node:internal/modules/esm/loader:212:12)\n    at node:internal/process/execution:355:29\n    at asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:105:11)\n    at Object.runEntryPointWithESMLoader (node:internal/modules/run_main:127:19)\n    at evalTypeScriptModuleEntryPoint (node:internal/process/execution:349:47)\n    at evalTypeScript (node:internal/process/execution:287:12)\n    at node:internal/main/eval_string:71:3\n\nNode.js v26.10.0",
+              "success": false
+            },
+            "matchedCaseId": "case-rec-102",
+            "retrievedFromMemory": true,
+            "patientFacts": {
+              "language": "JavaScript",
+              "framework": "Next.js",
+              "os": null,
+              "versions": {
+                "next": "15.x"
+              },
+              "errorSignature": "Error: Route handler cookies() should be awaited in Next.js 15. The `cookies()` function now returns a Promise.",
+              "diagnosedBugs": [],
+              "resolvedCount": 1,
+              "lastDiagnosis": "### 1. Diagnosis (Root Cause Hypothesis)\nIn Next.js 15, dynamic APIs like cookies(), headers(), and params became asynchronous Promises to allow internal performance optimizations and early streaming.\n\n*Why this happens:* Calling const cookieStore = cookies() throws a synchronous access runtime warning or error in Next.js 15.",
+              "lastTreatment": "// Before (Next.js 14):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}\n\n// After (Next.js 15 Treatment):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = await cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}",
+              "lastCodePatch": "// Before (Next.js 14):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}\n\n// After (Next.js 15 Treatment):\nimport { cookies } from 'next/headers';\nexport async function GET() {\n  const cookieStore = await cookies();\n  const token = cookieStore.get('token');\n  return Response.json({ token });\n}",
+              "lastSymptom": "Expected route handler to read the sessionId cookie from incoming request headers. However: Throws error at runtime stating cookies() is a Promise and must be awaited."
+            }
+          },
+          "timestamp": "2026-09-24T12:04:03.795Z"
+        }
+      ],
+      "toolCalls": [],
+      "appliedCures": []
+    }
+  }
+}
