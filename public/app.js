@@ -185,6 +185,104 @@ class CodeClinicApp {
       this.loadSessionState(),
       this.loadClinicalCases()
     ]);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const preview = urlParams.get('preview');
+    if (preview === 'consultation') {
+      this.setupConsultationPreview();
+    } else if (preview === 'sandbox') {
+      this.setupSandboxPreview();
+    }
+  }
+
+  setupConsultationPreview() {
+    const hero = document.getElementById('hero-sec');
+    const triage = document.getElementById('triage-section');
+    const intakeForm = document.getElementById('intake-form');
+    if (hero) hero.style.display = 'none';
+    if (triage) triage.style.display = 'none';
+    if (intakeForm) intakeForm.style.display = 'none';
+
+    const main = document.querySelector('.page-main');
+    if (main) {
+      main.style.maxWidth = '1080px';
+      main.style.paddingTop = '16px';
+    }
+
+    const layout = document.querySelector('.clinic-split-layout');
+    if (layout) {
+      layout.style.gridTemplateColumns = 'minmax(0, 1fr) 300px';
+    }
+
+    if (this.dialogueStream) {
+      this.dialogueStream.style.maxHeight = 'none';
+      this.dialogueStream.style.overflow = 'visible';
+    }
+
+    this.updateMedicalChart({
+      language: 'JavaScript / TypeScript',
+      framework: 'Next.js 15 (App Router)',
+      os: 'macOS / Node.js v26',
+      errorSignature: 'Error: Route "cookies()" should be awaited',
+      resolvedCount: 1
+    }, 'prescribed');
+
+    this.dialogueStream.innerHTML = '';
+
+    // Patient symptom message
+    this.appendUserMessage(
+      "Next.js 15 cookies() breaking async error: In Next.js 15, cookies() is now an asynchronous function and needs to be awaited.",
+      "Error: Route \"/api/user\" used `cookies().get('session')`. `cookies()` should be awaited before accessing properties.",
+      "import { cookies } from 'next/headers';\n\nexport async function GET() {\n  const cookieStore = cookies(); // ❌ Runtime error\n  const token = cookieStore.get('session');\n  return Response.json({ token });\n}"
+    );
+
+    // Doctor diagnosis & surgical diff patch
+    this.appendDoctorMessage({
+      phase: 'prescribed',
+      didSearch: true,
+      searchQuery: 'Next.js 15 cookies() async breaking change',
+      retrievedFromMemory: true,
+      diagnosis: `### Differential Diagnosis: Next.js 15 Async Request APIs Breaking Change\n\n**Root Cause:** In Next.js 15, \`cookies()\`, \`headers()\`, \`params\`, and \`searchParams\` were transitioned from synchronous getters to asynchronous Promises to allow dynamic prerendering and server performance improvements.\n\n**Diagnosis:** Calling synchronous property accesses like \`cookies().get(...)\` directly without \`await\` throws runtime warnings and halts execution during compilation or request execution.`,
+      patchCode: `--- app/api/user/route.js (Diseased)\n+++ app/api/user/route.js (Prescribed Cure)\n@@ -3,2 +3,2 @@\n export async function GET() {\n-  const cookieStore = cookies();\n+  const cookieStore = await cookies();\n   const token = cookieStore.get('session')?.value;`,
+      prevention: "When upgrading to Next.js 15+, run `npx @next/codemod@canary next-async-request-api .` or always `await cookies()`."
+    });
+  }
+
+  setupSandboxPreview() {
+    const hero = document.getElementById('hero-sec');
+    const triage = document.getElementById('triage-section');
+    const consultation = document.getElementById('consultation-section');
+    if (hero) hero.style.display = 'none';
+    if (triage) triage.style.display = 'none';
+    if (consultation) consultation.style.display = 'none';
+
+    if (this.sandboxCodeInput) {
+      this.sandboxCodeInput.value = `// Test surgical patch in isolated ICU sandbox:
+function calculateDiscount(price, user) {
+  // Surgical fix applied: safe optional chaining & default
+  return price * (1 - (user?.discountRate ?? 0.1));
+}
+
+console.log("Discounted price:", calculateDiscount(100, { discountRate: 0.25 }));
+console.log("With default discount:", calculateDiscount(100, null));`;
+    }
+
+    if (this.sandboxTerminalOutput) {
+      this.sandboxTerminalOutput.innerHTML = `<span style="color: #666;">&gt; Code Clinic ICU Sandbox v1.0 [Node.js v26.10.0 darwin-arm64]</span>
+<span style="color: #666;">&gt; Executing isolated runtime container...</span>
+
+Discounted price: 75
+With default discount: 90
+
+<span style="color: #27c93f;">✔ Sandbox execution clean. Exit code: 0 (Execution time: 14ms)</span>
+<span style="color: #27c93f;">✔ Memory footprint: 18.4MB / 128MB ceiling</span>`;
+    }
+
+    if (this.sandboxExitStatus) {
+      this.sandboxExitStatus.textContent = 'Clean Exit (0)';
+      this.sandboxExitStatus.style.background = 'rgba(39, 201, 63, 0.15)';
+      this.sandboxExitStatus.style.color = '#27c93f';
+    }
   }
 
   async loadSessionState() {
