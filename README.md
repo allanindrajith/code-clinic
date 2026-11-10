@@ -14,6 +14,7 @@
   <a href="https://github.com/allanindrajith/code-clinic/stargazers"><img src="https://img.shields.io/github/stars/allanindrajith/code-clinic?style=flat-square" alt="Stars" /></a>
   <a href="https://github.com/allanindrajith/code-clinic/issues"><img src="https://img.shields.io/github/issues/allanindrajith/code-clinic?style=flat-square" alt="Issues" /></a>
   <a href="https://github.com/allanindrajith/code-clinic/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square" alt="PRs Welcome" /></a>
+  <a href="https://www.buymeacoffee.com/allanidrajith"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-a3e635?style=flat-square&logo=buymeacoffee&logoColor=000000" alt="Buy Me a Coffee" /></a>
 </p>
 
 ---
